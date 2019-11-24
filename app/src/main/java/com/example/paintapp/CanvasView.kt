@@ -1,10 +1,7 @@
 package com.example.paintapp
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Path
+import android.graphics.*
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
@@ -34,6 +31,11 @@ class MyCanvasView(context: Context) : View(context) {
     private var currentX = 0f
     private var currentY = 0f
     private val touchTolerance = ViewConfiguration.get(context).scaledTouchSlop
+    private lateinit var frame: Rect
+    private val drawing = Path()
+
+    // Path representing what's currently being drawn
+    private val curPath = Path()
 
 
     override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
@@ -43,10 +45,22 @@ class MyCanvasView(context: Context) : View(context) {
         extraCanvas = Canvas(extraBitmap)
         extraCanvas.drawColor(backgroundColor)
 
+        val inset = 40
+        frame = Rect(inset, inset, width - inset, height - inset)
+
     }
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         canvas.drawBitmap(extraBitmap, 0f, 0f, null)
+//Draw the rectangle
+        canvas.drawRect(frame, paint)
+        // Draw the drawing so far
+        canvas.drawPath(drawing, paint)
+// Draw any current squiggle
+        canvas.drawPath(curPath, paint)
+// Draw a frame around the canvas
+        canvas.drawRect(frame, paint)
+
     }
 
     private fun touchStart() {
@@ -74,6 +88,11 @@ class MyCanvasView(context: Context) : View(context) {
     private fun touchUp() {
         // Reset the path so it doesn't get drawn again.
         path.reset()
+        // Add the current path to the drawing so far
+        drawing.addPath(curPath)
+// Rewind the current path for the next touch
+        curPath.reset()
+
     }
     override fun onTouchEvent(event: MotionEvent): Boolean {
          motionTouchEventX = event.x
